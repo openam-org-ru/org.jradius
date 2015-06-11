@@ -13,8 +13,8 @@ import java.util.Hashtable;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
 
-import org.bouncycastle.asn1.ASN1Object;
-import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.crypto.prng.ThreadedSeedGenerator;
 
 /**
@@ -578,7 +578,7 @@ public class TlsProtocolHandler
                         while (bis.available() > 0)
                         {
                             byte[] dnBytes = TlsUtils.readOpaque16(bis);
-                            authorityDNs.add(X509Name.getInstance(ASN1Object.fromByteArray(dnBytes)));
+                            authorityDNs.add(X500Name.getInstance(ASN1Primitive.fromByteArray(dnBytes)));
                         }
 
                         this.tlsClient.processServerCertificateRequest(types, authorityDNs);

@@ -6,7 +6,6 @@ import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.signers.DSADigestSigner;
 import org.bouncycastle.crypto.signers.DSASigner;
-import org.bouncycastle.jce.provider.util.NullDigest;
 
 class TlsDSSSigner implements TlsSigner
 {
@@ -14,7 +13,7 @@ class TlsDSSSigner implements TlsSigner
         throws CryptoException
     {
         // Note: Only use the SHA1 part of the hash
-        Signer sig = new DSADigestSigner(new DSASigner(), new NullDigest());
+        Signer sig = new DSADigestSigner(new DSASigner(), new org.bouncycastle.crypto.digests.NullDigest());
         sig.init(true, privateKey);
         sig.update(md5andsha1, 16, 20);
         return sig.generateSignature();

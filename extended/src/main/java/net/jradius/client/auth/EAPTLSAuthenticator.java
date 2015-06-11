@@ -48,12 +48,13 @@ import net.jradius.tls.TlsProtocolHandler;
 import net.jradius.util.KeyStoreUtil;
 
 import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DEREncodable;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObject;
-import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.nist.NISTNamedCurves;
 import org.bouncycastle.asn1.oiw.ElGamalParameter;
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
@@ -172,7 +173,7 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
 					{
 			            ByteArrayInputStream bis = new ByteArrayInputStream(cert.getEncoded());
 			            ASN1InputStream ais = new ASN1InputStream(bis);
-			            DERObject o = ais.readObject();
+			            ASN1Primitive o = ais.readObject();
 			            tmp.addElement(X509CertificateStructure.getInstance(o));
 			            if (bis.available() > 0)
 			            {
@@ -562,7 +563,7 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
     {
         return createKey(
             PrivateKeyInfo.getInstance(
-                ASN1Object.fromByteArray(privateKeyInfoData)));
+            		ASN1Primitive.fromByteArray(privateKeyInfoData)));
     }
 
     /**
@@ -610,8 +611,8 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
         }
         else if (algId.getObjectId().equals(PKCSObjectIdentifiers.dhKeyAgreement))
         {
-            DHParameter     params = new DHParameter((ASN1Sequence)keyInfo.getAlgorithmId().getParameters());
-            DERInteger      derX = (DERInteger)keyInfo.getPrivateKey();
+            DHParameter     params = DHParameter.getInstance((ASN1Sequence)keyInfo.getAlgorithmId().getParameters());
+            ASN1Integer      derX = (ASN1Integer)keyInfo.getPrivateKey();
 
             BigInteger lVal = params.getL();
             int l = lVal == null ? 0 : lVal.intValue();
@@ -621,20 +622,20 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
         }
         else if (algId.getObjectId().equals(OIWObjectIdentifiers.elGamalAlgorithm))
         {
-            ElGamalParameter    params = new ElGamalParameter((ASN1Sequence)keyInfo.getAlgorithmId().getParameters());
-            DERInteger          derX = (DERInteger)keyInfo.getPrivateKey();
+            ElGamalParameter    params = ElGamalParameter.getInstance((ASN1Sequence)keyInfo.getAlgorithmId().getParameters());
+            ASN1Integer          derX = (ASN1Integer)keyInfo.getPrivateKey();
 
             return new ElGamalPrivateKeyParameters(derX.getValue(), new ElGamalParameters(params.getP(), params.getG()));
         }
         else if (algId.getObjectId().equals(X9ObjectIdentifiers.id_dsa))
         {
-            DERInteger derX = (DERInteger)keyInfo.getPrivateKey();
-            DEREncodable de = keyInfo.getAlgorithmId().getParameters();
+        	ASN1Integer derX = (ASN1Integer)keyInfo.getPrivateKey();
+            ASN1Encodable de = keyInfo.getAlgorithmId().getParameters();
 
             DSAParameters parameters = null;
             if (de != null)
             {
-                DSAParameter params = DSAParameter.getInstance(de.getDERObject());
+                DSAParameter params = DSAParameter.getInstance(de.toASN1Primitive());
                 parameters = new DSAParameters(params.getP(), params.getQ(), params.getG());
             }
 
@@ -642,12 +643,12 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
         }
         else if (algId.getObjectId().equals(X9ObjectIdentifiers.id_ecPublicKey))
         {
-            X962Parameters      params = new X962Parameters((DERObject)keyInfo.getAlgorithmId().getParameters());
+            X962Parameters      params = new X962Parameters((ASN1Primitive)keyInfo.getAlgorithmId().getParameters());
             ECDomainParameters  dParams = null;
             
             if (params.isNamedCurve())
             {
-                DERObjectIdentifier oid = (DERObjectIdentifier)params.getParameters();
+            	ASN1ObjectIdentifier oid = (ASN1ObjectIdentifier)params.getParameters();
                 X9ECParameters      ecP = X962NamedCurves.getByOID(oid);
 
                 if (ecP == null)
@@ -674,7 +675,7 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
             }
             else
             {
-                X9ECParameters ecP = new X9ECParameters(
+                X9ECParameters ecP = X9ECParameters.getInstance(
                             (ASN1Sequence)params.getParameters());
                 dParams = new ECDomainParameters(
                                             ecP.getCurve(),

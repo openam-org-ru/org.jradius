@@ -7,6 +7,7 @@ import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.X509Extension;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -138,10 +139,10 @@ class TlsRSAKeyExchange implements TlsKeyExchange
         X509Extensions exts = c.getTBSCertificate().getExtensions();
         if (exts != null)
         {
-            X509Extension ext = exts.getExtension(X509Extensions.KeyUsage);
+        	X509Extension ext = exts.getExtension(X509Extensions.KeyUsage);
             if (ext != null)
             {
-                DERBitString ku = KeyUsage.getInstance(ext);
+                KeyUsage ku = KeyUsage.getInstance(ext);
                 int bits = ku.getBytes()[0] & 0xff;
                 if ((bits & keyUsageBits) != keyUsageBits)
                 {

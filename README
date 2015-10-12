@@ -1,4 +1,6 @@
 
+[![Build Status](https://travis-ci.org/openam-org-ru/org.jradius.svg?branch=master)](https://travis-ci.org/openam-org-ru/org.jradius)
+
 Welcome to JRadius!
 
 JRadius should eventually be able to work with multiple underlying RADIUS

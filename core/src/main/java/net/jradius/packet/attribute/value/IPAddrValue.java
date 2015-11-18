@@ -70,7 +70,8 @@ public class IPAddrValue extends AttributeValue
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+        	RadiusLog.error("error set IPAddrValue value + "+ s + " error: " + e.toString());
+            throw new RuntimeException(e);
         }
     }
     

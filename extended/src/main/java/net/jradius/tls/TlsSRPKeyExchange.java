@@ -9,6 +9,7 @@ import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.X509Extension;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.crypto.CryptoException;
@@ -82,7 +83,7 @@ class TlsSRPKeyExchange implements TlsKeyExchange
                 TlsProtocolHandler.AP_unexpected_message);
         }
 
-        X509CertificateStructure x509Cert = serverCertificate.certs[0];
+        org.bouncycastle.asn1.x509.Certificate x509Cert = serverCertificate.certs[0];
         SubjectPublicKeyInfo keyInfo = x509Cert.getSubjectPublicKeyInfo();
 
         try
@@ -218,12 +219,12 @@ class TlsSRPKeyExchange implements TlsKeyExchange
         }
     }
 
-    private void validateKeyUsage(X509CertificateStructure c, int keyUsageBits) throws IOException
+    private void validateKeyUsage(org.bouncycastle.asn1.x509.Certificate x509Cert, int keyUsageBits) throws IOException
     {
-        X509Extensions exts = c.getTBSCertificate().getExtensions();
+        Extensions exts = x509Cert.getTBSCertificate().getExtensions();
         if (exts != null)
         {
-        	X509Extension ext = exts.getExtension(X509Extensions.KeyUsage);
+        	Extension ext = exts.getExtension(X509Extensions.KeyUsage);
             if (ext != null)
             {
                 KeyUsage ku = KeyUsage.getInstance(ext);

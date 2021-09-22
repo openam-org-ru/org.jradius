@@ -20,7 +20,7 @@ public class Certificate
     /**
      * The certificates.
      */
-    protected X509CertificateStructure[] certs;
+    protected org.bouncycastle.asn1.x509.Certificate[] certs;
 
     /**
      * Parse the ServerCertificate message.
@@ -31,7 +31,7 @@ public class Certificate
      */
     public static Certificate parse(InputStream is) throws IOException
     {
-        X509CertificateStructure[] certs;
+    	org.bouncycastle.asn1.x509.Certificate[] certs;
         int left = TlsUtils.readUint24(is);
         Vector tmp = new Vector();
         while (left > 0)
@@ -43,17 +43,17 @@ public class Certificate
             ByteArrayInputStream bis = new ByteArrayInputStream(buf);
             ASN1InputStream ais = new ASN1InputStream(bis);
             ASN1Primitive o = ais.readObject();
-            tmp.addElement(X509CertificateStructure.getInstance(o));
+            tmp.addElement(org.bouncycastle.asn1.x509.Certificate.getInstance(o));
             if (bis.available() > 0)
             {
                 throw new IllegalArgumentException(
                     "Sorry, there is garbage data left after the certificate");
             }
         }
-        certs = new X509CertificateStructure[tmp.size()];
+        certs = new org.bouncycastle.asn1.x509.Certificate[tmp.size()];
         for (int i = 0; i < tmp.size(); i++)
         {
-            certs[i] = (X509CertificateStructure)tmp.elementAt(i);
+            certs[i] = (org.bouncycastle.asn1.x509.Certificate)tmp.elementAt(i);
         }
         return new Certificate(certs);
     }
@@ -90,7 +90,7 @@ public class Certificate
      * 
      * @param certs The certs the chain should contain.
      */
-    public Certificate(X509CertificateStructure[] certs)
+    public Certificate(org.bouncycastle.asn1.x509.Certificate[] certs)
     {
         this.certs = certs;
     }
@@ -98,9 +98,9 @@ public class Certificate
     /**
      * @return An array which contains the certs, this chain contains.
      */
-    public X509CertificateStructure[] getCerts()
+    public org.bouncycastle.asn1.x509.Certificate[] getCerts()
     {
-        X509CertificateStructure[] result = new X509CertificateStructure[certs.length];
+    	org.bouncycastle.asn1.x509.Certificate[] result = new org.bouncycastle.asn1.x509.Certificate[certs.length];
         System.arraycopy(certs, 0, result, 0, certs.length);
         return result;
     }

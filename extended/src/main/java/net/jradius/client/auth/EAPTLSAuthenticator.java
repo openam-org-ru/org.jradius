@@ -52,22 +52,20 @@ import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1Integer;
-import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.nist.NISTNamedCurves;
 import org.bouncycastle.asn1.oiw.ElGamalParameter;
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.DHParameter;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
 import org.bouncycastle.asn1.pkcs.RSAPrivateKeyStructure;
 import org.bouncycastle.asn1.sec.ECPrivateKeyStructure;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.teletrust.TeleTrusTNamedCurves;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.DSAParameter;
-import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.asn1.x9.X962NamedCurves;
 import org.bouncycastle.asn1.x9.X962Parameters;
 import org.bouncycastle.asn1.x9.X9ECParameters;
@@ -164,7 +162,7 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
 			{
 				if (keyManagers != null && keyManagers.length > 0)
 				{
-					X509CertificateStructure[] certs = null;
+					org.bouncycastle.asn1.x509.Certificate[] certs = null;
 					X509Certificate[] certChain = ((X509KeyManager)keyManagers[0]).getCertificateChain("");
 					PrivateKey key = ((X509KeyManager)keyManagers[0]).getPrivateKey("");
 					Vector tmp = new Vector();
@@ -174,17 +172,17 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
 			            ByteArrayInputStream bis = new ByteArrayInputStream(cert.getEncoded());
 			            ASN1InputStream ais = new ASN1InputStream(bis);
 			            ASN1Primitive o = ais.readObject();
-			            tmp.addElement(X509CertificateStructure.getInstance(o));
+			            tmp.addElement(org.bouncycastle.asn1.x509.Certificate.getInstance(o));
 			            if (bis.available() > 0)
 			            {
 			                throw new IllegalArgumentException(
 			                    "Sorry, there is garbage data left after the certificate");
 			            }
 			        }
-			        certs = new X509CertificateStructure[tmp.size()];
+			        certs = new org.bouncycastle.asn1.x509.Certificate[tmp.size()];
 			        for (int i = 0; i < tmp.size(); i++)
 			        {
-			            certs[i] = (X509CertificateStructure)tmp.elementAt(i);
+			            certs[i] = (org.bouncycastle.asn1.x509.Certificate)tmp.elementAt(i);
 			        }
 
 					tlsClient.enableClientAuthentication(new Certificate(certs), createKey(key.getEncoded()));
@@ -593,12 +591,12 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
         PrivateKeyInfo    keyInfo)
         throws IOException
     {
-        AlgorithmIdentifier     algId = keyInfo.getAlgorithmId();
+        AlgorithmIdentifier     algId = keyInfo.getPrivateKeyAlgorithm();
         
-        if (algId.getObjectId().equals(PKCSObjectIdentifiers.rsaEncryption))
+        if (algId.getAlgorithm().equals(PKCSObjectIdentifiers.rsaEncryption))
         {
-            RSAPrivateKeyStructure  keyStructure = new RSAPrivateKeyStructure((ASN1Sequence)keyInfo.getPrivateKey());
-
+            RSAPrivateKeyStructure  keyStructure = new RSAPrivateKeyStructure((ASN1Sequence)keyInfo.parsePrivateKey());
+            //RSAPrivateKey  keyStructure=new 
             return new RSAPrivateCrtKeyParameters(
                                         keyStructure.getModulus(),
                                         keyStructure.getPublicExponent(),
@@ -609,10 +607,10 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
                                         keyStructure.getExponent2(),
                                         keyStructure.getCoefficient());
         }
-        else if (algId.getObjectId().equals(PKCSObjectIdentifiers.dhKeyAgreement))
+        else if (algId.getAlgorithm().equals(PKCSObjectIdentifiers.dhKeyAgreement))
         {
-            DHParameter     params = DHParameter.getInstance((ASN1Sequence)keyInfo.getAlgorithmId().getParameters());
-            ASN1Integer      derX = (ASN1Integer)keyInfo.getPrivateKey();
+            DHParameter     params = DHParameter.getInstance((ASN1Sequence)keyInfo.getPrivateKeyAlgorithm().getParameters());
+            ASN1Integer      derX = (ASN1Integer)keyInfo.parsePrivateKey();
 
             BigInteger lVal = params.getL();
             int l = lVal == null ? 0 : lVal.intValue();
@@ -620,17 +618,17 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
 
             return new DHPrivateKeyParameters(derX.getValue(), dhParams);
         }
-        else if (algId.getObjectId().equals(OIWObjectIdentifiers.elGamalAlgorithm))
+        else if (algId.getAlgorithm().equals(OIWObjectIdentifiers.elGamalAlgorithm))
         {
-            ElGamalParameter    params = ElGamalParameter.getInstance((ASN1Sequence)keyInfo.getAlgorithmId().getParameters());
-            ASN1Integer          derX = (ASN1Integer)keyInfo.getPrivateKey();
+            ElGamalParameter    params = ElGamalParameter.getInstance((ASN1Sequence)keyInfo.getPrivateKeyAlgorithm().getParameters());
+            ASN1Integer          derX = (ASN1Integer)keyInfo.parsePrivateKey();
 
             return new ElGamalPrivateKeyParameters(derX.getValue(), new ElGamalParameters(params.getP(), params.getG()));
         }
-        else if (algId.getObjectId().equals(X9ObjectIdentifiers.id_dsa))
+        else if (algId.getAlgorithm().equals(X9ObjectIdentifiers.id_dsa))
         {
-        	ASN1Integer derX = (ASN1Integer)keyInfo.getPrivateKey();
-            ASN1Encodable de = keyInfo.getAlgorithmId().getParameters();
+        	ASN1Integer derX = (ASN1Integer)keyInfo.parsePrivateKey();
+            ASN1Encodable de = keyInfo.getPrivateKeyAlgorithm().getParameters();
 
             DSAParameters parameters = null;
             if (de != null)
@@ -641,9 +639,9 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
 
             return new DSAPrivateKeyParameters(derX.getValue(), parameters);
         }
-        else if (algId.getObjectId().equals(X9ObjectIdentifiers.id_ecPublicKey))
+        else if (algId.getAlgorithm().equals(X9ObjectIdentifiers.id_ecPublicKey))
         {
-            X962Parameters      params = new X962Parameters((ASN1Primitive)keyInfo.getAlgorithmId().getParameters());
+            X962Parameters      params = X962Parameters.getInstance((ASN1Primitive)keyInfo.getPrivateKeyAlgorithm().getParameters());
             ECDomainParameters  dParams = null;
             
             if (params.isNamedCurve())
@@ -685,7 +683,7 @@ public class EAPTLSAuthenticator extends EAPAuthenticator
                                             ecP.getSeed());
             }
 
-            ECPrivateKeyStructure   ec = new ECPrivateKeyStructure((ASN1Sequence)keyInfo.getPrivateKey());
+            ECPrivateKeyStructure   ec = new ECPrivateKeyStructure((ASN1Sequence)keyInfo.parsePrivateKey());
 
             return new ECPrivateKeyParameters(ec.getKey(), dParams);
         }

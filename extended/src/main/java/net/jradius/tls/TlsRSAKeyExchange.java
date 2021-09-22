@@ -8,6 +8,7 @@ import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.asn1.x509.X509CertificateStructure;
 import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.X509Extension;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -45,7 +46,7 @@ class TlsRSAKeyExchange implements TlsKeyExchange
 
     public void processServerCertificate(Certificate serverCertificate) throws IOException
     {
-        X509CertificateStructure x509Cert = serverCertificate.certs[0];
+    	org.bouncycastle.asn1.x509.Certificate x509Cert = serverCertificate.certs[0];
         SubjectPublicKeyInfo keyInfo = x509Cert.getSubjectPublicKeyInfo();
 
         try
@@ -134,12 +135,12 @@ class TlsRSAKeyExchange implements TlsKeyExchange
         return tmp;
     }
 
-    private void validateKeyUsage(X509CertificateStructure c, int keyUsageBits) throws IOException
+    private void validateKeyUsage(org.bouncycastle.asn1.x509.Certificate c, int keyUsageBits) throws IOException
     {
-        X509Extensions exts = c.getTBSCertificate().getExtensions();
+        Extensions exts = c.getTBSCertificate().getExtensions();
         if (exts != null)
         {
-        	X509Extension ext = exts.getExtension(X509Extensions.KeyUsage);
+        	Extension ext = exts.getExtension(X509Extensions.KeyUsage);
             if (ext != null)
             {
                 KeyUsage ku = KeyUsage.getInstance(ext);

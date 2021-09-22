@@ -68,7 +68,7 @@ public class DefaultTlsClient implements TlsClient
     private TlsProtocolHandler handler;
 
     // (Optional) details for client-side authentication
-    private Certificate clientCert = new Certificate(new X509CertificateStructure[0]);
+    private Certificate clientCert = new Certificate(new org.bouncycastle.asn1.x509.Certificate[0]);
     private AsymmetricKeyParameter clientPrivateKey = null;
     private TlsSigner clientSigner = null;
 
